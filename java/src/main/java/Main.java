@@ -12,9 +12,9 @@ public class Main {
 
         // Create table description
         TableDesc desc = new TableDesc("MyTable");
-        assert(desc.addField(FieldType.MDV_FLD_TYPE_CHAR, 0, "Col1"));
-        assert(desc.addField(FieldType.MDV_FLD_TYPE_INT32, 2, "Col2"));
-        assert(desc.addField(FieldType.MDV_FLD_TYPE_BOOL, 1, "Col3"));
+        desc.addField(FieldType.MDV_FLD_TYPE_CHAR, 0, "Col1");
+        desc.addField(FieldType.MDV_FLD_TYPE_INT32, 2, "Col2");
+        desc.addField(FieldType.MDV_FLD_TYPE_BOOL, 1, "Col3");
 
         // Create table
         Table table = client.createTable(desc);
@@ -30,38 +30,41 @@ public class Main {
 
             // Row 1
             {
-                assert(row.set(0, "Hello"));        // First field is string
+                row.setString(0, "Hello");                              // First field is string
 
                 // Second field is pair of integers
                 ArrayOfInt32 i32arr = new ArrayOfInt32(2);
                 i32arr.set(0, 42);
                 i32arr.set(1, 43);
-                assert(row.set(1, i32arr, 2));
+                row.setInt32(1, i32arr, 2);
                 i32arr.delete();
 
-                assert(row.set(2, true));           // Third field is boolean
+                row.setBool(2, true);                                   // Third field is boolean
 
-                assert(rowset.add(row));            // Add row to rows set
+                if (!rowset.add(row))                                   // Add row to rows set
+                    System.out.println("Row insertion failed");
             }
 
             // Row 2
             {
-                assert(row.set(0, "World"));        // First field is string
-                assert(row.set(1, 44));             // Second field is single integer
-                assert(row.set(2, false));          // Third field is boolean
-                assert(rowset.add(row));            // Add row to rows set
+                row.setString(0, "World");                              // First field is string
+                row.setInt32(1, 44);                                    // Second field is single integer
+                row.setBool(2, false);                                  // Third field is boolean
+                if (!rowset.add(row))                                   // Add row to rows set
+                    System.out.println("Row insertion failed");
             }
 
-            row.delete();                           // Delete row
+            row.delete();                                               // Delete row
         }
 
-        assert(client.insertRows(table, rowset));   // Insert rows set into the table
+        if (!client.insertRows(table, rowset))                          // Insert rows set into the table
+            System.out.println("Row insertion into the table failed");
 
-        rowset.delete();                            // Delete rows set
+        rowset.delete();                                                // Delete rows set
 
-        table.close();                              // Close table
+        table.close();                                                  // Close table
 
-        client.close();                             // Close client
+        client.close();                                                 // Close client
 
         mdv.clientFinalize();
     }
