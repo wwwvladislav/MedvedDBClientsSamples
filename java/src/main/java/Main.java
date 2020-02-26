@@ -20,13 +20,14 @@ public class Main {
         Table table = client.createTable(desc);
         desc.delete();
 
+        // INSERT
+
         // Create rows set
         RowSet rowset = new RowSet(3);
 
         // Fill rows set
         {
-            // Create row
-            Row row = new Row(3);
+            Row row = new Row(3);                                       // Create row
 
             // Row 1
             {
@@ -36,7 +37,7 @@ public class Main {
                 ArrayOfInt32 i32arr = new ArrayOfInt32(2);
                 i32arr.set(0, 42);
                 i32arr.set(1, 43);
-                row.setInt32(1, i32arr, 2);
+                row.setInt32Array(1, i32arr, 2);
                 i32arr.delete();
 
                 row.setBool(2, true);                                   // Third field is boolean
@@ -62,8 +63,44 @@ public class Main {
 
         rowset.delete();                                                // Delete rows set
 
-        table.close();                                                  // Close table
+        // SELECT
 
+        BitSet bitset = new BitSet(3);                                  // Create bit set
+        bitset.fill(true);
+
+        ResultSet result = client.select(table, bitset, "");            // Request table content
+
+        if (result == null)
+            System.out.println("Table content reading failed");
+
+        ResultSetEnumerator resultIt = result.enumerator();             // Get result set iterator
+
+        while(resultIt.next())
+        {
+            RowSet rows = resultIt.current();
+            RowSetEnumerator rowsIt = rows.enumerator();
+
+            while(rowsIt.next())
+            {
+                Row row = rowsIt.current();
+
+                for(long i = 0; i < row.cols(); ++i)
+                {
+                    row.getBool(0);
+                }
+
+                row.delete();
+            }
+
+            rowsIt.delete();
+            rows.delete();
+        }
+
+        resultIt.delete();                                              // Delete result set iterator
+
+        result.delete();                                                // Delete result set
+        bitset.delete();                                                // Delete bit set
+        table.delete();                                                  // Close table
         client.close();                                                 // Close client
 
         mdv.clientFinalize();
