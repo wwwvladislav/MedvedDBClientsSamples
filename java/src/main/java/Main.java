@@ -23,7 +23,7 @@ public class Main {
         // INSERT
 
         // Create rows set
-        RowSet rowset = new RowSet(3);
+        RowSet rowset = new RowSet(table);
 
         // Fill rows set
         {
@@ -58,7 +58,7 @@ public class Main {
             row.delete();                                               // Delete row
         }
 
-        if (!client.insertRows(table, rowset))                          // Insert rows set into the table
+        if (!client.insert(rowset))                                     // Insert rows set into the table
             System.out.println("Row insertion into the table failed");
 
         rowset.delete();                                                // Delete rows set
@@ -68,39 +68,33 @@ public class Main {
         BitSet bitset = new BitSet(3);                                  // Create bit set
         bitset.fill(true);
 
-        ResultSet result = client.select(table, bitset, "");            // Request table content
+        RowSet result = client.select(table, bitset, "");               // Request table content
 
         if (result == null)
             System.out.println("Table content reading failed");
 
-        ResultSetEnumerator resultIt = result.enumerator();             // Get result set iterator
+        RowSetEnumerator it = result.enumerator();                      // Get result set iterator
 
-        while(resultIt.next())
+        while(it.next())
         {
-            RowSet rows = resultIt.current();
-            RowSetEnumerator rowsIt = rows.enumerator();
+            Row row = it.current();
 
-            while(rowsIt.next())
-            {
-                Row row = rowsIt.current();
+            long f0size = row.fieldSize(0);                             // Get items count in 0's field
+            long f1size = row.fieldSize(1);                             // Get items count in 1'st field
+            long f2size = row.fieldSize(2);                             // Get items count in 2'nd field
 
-                for(long i = 0; i < row.cols(); ++i)
-                {
-                    row.getBool(0);
-                }
+            String f0 = row.getString(0);                               // Get 0's field data
+            ArrayOfInt32 f1 = row.getInt32Array(1);                     // Get 1'st field data
+            boolean f2 = row.getBool(2);                                // Get 2'nd field data
 
-                row.delete();
-            }
-
-            rowsIt.delete();
-            rows.delete();
+            row.delete();
         }
 
-        resultIt.delete();                                              // Delete result set iterator
+        it.delete();                                                    // Delete result set iterator
 
         result.delete();                                                // Delete result set
         bitset.delete();                                                // Delete bit set
-        table.delete();                                                  // Close table
+        table.delete();                                                 // Close table
         client.close();                                                 // Close client
 
         mdv.clientFinalize();
