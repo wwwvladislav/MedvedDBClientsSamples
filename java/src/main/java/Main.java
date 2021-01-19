@@ -1,15 +1,11 @@
+import javax.print.PrintService;
+import javax.sound.sampled.SourceDataLine;
+
 import mdv.*;
 
 public class Main {
 
-    public static void main(String[] args) {
-        System.loadLibrary("mdv4j");
-
-        mdv.clientInitialize();
-
-        // Conenct to DB
-        Client client = Client.connect(new ClientConfig("tcp://localhost:4801"));
-
+    private static String createTable(Client client) {
         // Create table description
         TableDesc desc = new TableDesc("MyTable");
         desc.addField(FieldType.MDV_FLD_TYPE_CHAR, 0, "Col1");
@@ -19,6 +15,12 @@ public class Main {
         // Create table
         Table table = client.createTable(desc);
         desc.delete();
+
+        // Show table UUID
+        UUID uuid = table.getUUID();
+        String tableUUID = uuid.toString();
+        System.out.println("Table uuid: " + tableUUID);
+        uuid.delete();
 
         // INSERT
 
@@ -63,6 +65,18 @@ public class Main {
 
         rowset.delete();                                                // Delete rows set
 
+        table.delete();                                                 // Close table
+
+        return tableUUID;
+    }
+
+    private static void selectFromTable(Client client, String tableUUID) {
+        UUID uuid = new UUID(tableUUID);
+
+        Table table = client.getTable(uuid);
+
+        uuid.delete();
+
         // SELECT
 
         BitSet bitset = new BitSet(3);                                  // Create bit set
@@ -94,8 +108,22 @@ public class Main {
 
         result.delete();                                                // Delete result set
         bitset.delete();                                                // Delete bit set
-        table.delete();                                                 // Close table
-        client.close();                                                 // Close client
+        table.delete();
+    }
+
+    public static void main(String[] args) {
+        System.loadLibrary("mdv4j");
+
+        mdv.clientInitialize();
+
+        // Conenct to DB
+        Client client = Client.connect(new ClientConfig("tcp://localhost:4800"));   // Connect to DB
+
+        String tableUUID = createTable(client);
+
+        selectFromTable(client, tableUUID);
+
+        client.close();                                                             // Close client
 
         mdv.clientFinalize();
     }
